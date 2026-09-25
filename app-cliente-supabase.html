@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitCoach - Tu App de Entrenamiento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #18181b; color: #fafafa; }
+        .hidden-screen { display: none; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- ⚠️ RELLENA ESTOS DOS DATOS: Supabase → Project Settings → API -->
+    <script>
+        const SUPABASE_URL = "https://cjwlalyopwinwycidblv.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_1JhsRYnn7PIpoPWfjc8oOw_6Uhe0tuD";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+
+    <!-- PANTALLA DE LOGIN -->
+    <div id="login-screen" class="flex-1 flex flex-col justify-center items-center p-6">
+        <h1 class="text-4xl font-extrabold mb-2 text-blue-500">FitCoach</h1>
+        <p class="text-zinc-400 mb-8 text-center">Inicia sesión con las credenciales que te dio tu entrenador</p>
+
+        <div class="w-full max-w-sm bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-xl">
+            <label class="block text-sm font-semibold mb-2">Email</label>
+            <input type="email" id="email" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500 text-white" placeholder="tu@email.com">
+
+            <label class="block text-sm font-semibold mb-2">Contraseña</label>
+            <input type="password" id="pass" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 mb-6 focus:outline-none focus:border-blue-500 text-white" placeholder="••••••••">
+
+            <button onclick="iniciarSesion()" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors">
+                Entrar
+            </button>
+            <p id="login-error" class="text-red-400 text-sm text-center mt-3 hidden"></p>
+        </div>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL (RUTINA) -->
+    <div id="app-screen" class="hidden-screen flex-1 p-4 flex flex-col">
+        <header class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4 mt-4">
+            <div>
+                <h2 class="text-2xl font-bold" id="user-name">Hola, Atleta</h2>
+                <p class="text-blue-400 text-sm">Tu plan de entrenamiento</p>
+            </div>
+            <button onclick="cerrarSesion()" class="text-sm bg-zinc-800 px-3 py-1 rounded border border-zinc-700">Salir</button>
+        </header>
+
+        <div class="flex-1">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 mb-6 shadow-lg">
+                <h3 class="font-bold text-lg mb-2">Registrar Entrenamiento de Hoy</h3>
+                <p class="text-sm text-zinc-400 mb-4">Envía tu reporte diario directamente al Centro de Mando.</p>
+
+                <input type="text" id="nombre-rutina" placeholder="Ej. Empuje Pesado" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 mb-3 text-white">
+
+                <div class="flex gap-3 mb-4">
+                    <div class="flex-1">
+                        <label class="text-xs text-zinc-500">Duración</label>
+                        <input type="text" id="duracion" placeholder="1h 15m" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-xs text-zinc-500">Dificultad (1-10)</label>
+                        <input type="number" id="rpe" placeholder="8" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white">
+                    </div>
+                </div>
+
+                <button onclick="enviarEntrenamiento()" id="btn-enviar" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors shadow-lg shadow-blue-900/50">
+                    Enviar a mi Coach
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function iniciarSesion() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('pass').value.trim();
+            const btn = document.getElementById('btn-login');
+            const errorEl = document.getElementById('login-error');
+            errorEl.classList.add('hidden');
+
+            if (!email || !password) {
+                errorEl.innerText = "Completa ambos campos";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            btn.innerHTML = "Verificando...";
+            btn.disabled = true;
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                errorEl.innerText = "Email o contraseña incorrectos.";
+                errorEl.classList.remove('hidden');
+                btn.innerHTML = "Entrar";
+                btn.disabled = false;
+                return;
+            }
+
+            const { data: perfil } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', data.user.id)
+                .single();
+
+            document.getElementById('user-name').innerText = "Hola, " + (perfil ? perfil.full_name : "Atleta");
+            document.getElementById('login-screen').classList.add('hidden-screen');
+            document.getElementById('app-screen').classList.remove('hidden-screen');
+            btn.innerHTML = "Entrar";
+            btn.disabled = false;
+        }
+
+        async function enviarEntrenamiento() {
+            const rutina = document.getElementById('nombre-rutina').value.trim();
+            const duracion = document.getElementById('duracion').value.trim();
+            const rpe = document.getElementById('rpe').value.trim();
+            const btn = document.getElementById('btn-enviar');
+
+            if (!rutina) return alert("Escribe el nombre de la rutina de hoy.");
+
+            btn.innerHTML = "Enviando...";
+            btn.disabled = true;
+
+            const { data: { user } } = await supabase.auth.getUser();
+
+            const { error } = await supabase.from('workouts').insert({
+                client_id: user.id,
+                routine_name: rutina,
+                duration: duracion,
+                rpe: rpe ? parseInt(rpe) : null
+            });
+
+            if (error) {
+                alert("Hubo un error al enviar el reporte: " + error.message);
+            } else {
+                alert("¡Entrenamiento registrado! Tu coach ya puede verlo.");
+                document.getElementById('nombre-rutina').value = "";
+                document.getElementById('duracion').value = "";
+                document.getElementById('rpe').value = "";
+            }
+
+            btn.innerHTML = "Enviar a mi Coach";
+            btn.disabled = false;
+        }
+
+        async function cerrarSesion() {
+            await supabase.auth.signOut();
+            document.getElementById('app-screen').classList.add('hidden-screen');
+            document.getElementById('login-screen').classList.remove('hidden-screen');
+            document.getElementById('email').value = "";
+            document.getElementById('pass').value = "";
+        }
+
+        // Si ya había sesión abierta (recargó la página), entra directo
+        (async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: perfil } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+                document.getElementById('user-name').innerText = "Hola, " + (perfil ? perfil.full_name : "Atleta");
+                document.getElementById('login-screen').classList.add('hidden-screen');
+                document.getElementById('app-screen').classList.remove('hidden-screen');
+            }
+        })();
+    </script>
+</body>
+</html>
