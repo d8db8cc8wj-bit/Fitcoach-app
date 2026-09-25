@@ -1,186 +1,215 @@
-<!DOCTYPE html>											
-<html lang="es">											
-<head>											
-<meta charset="UTF-8">											
-<meta name="viewport" content="width=device-width, initial-scale=1.0">											
-<title>FitCoach - Centro de Mando</title>											
-<script src="https://cdn.tailwindcss.com"></script>											
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>											
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>											
-<style>											
-body { background-color: #09090b; color: #f4f4f5; }											
-.glass { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(10px); border: 1px solid #27272a; }											
-.hidden-screen { display: none; }											
-</style>											
-</head>											
-<body class="min-h-screen">											
-											
-<!-- PANTALLA DE LOGIN -->											
-<div id="lock-screen" class="min-h-screen flex flex-col justify-center items-center p-6">											
-<h1 class="text-3xl font-bold text-blue-500 mb-6">FitCoach PRO</h1>											
-<div class="w-full max-w-sm bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-xl">											
-<label class="block text-sm font-semibold mb-2">Email</label>											
-<input type="email" id="coach-email" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500 text-white" placeholder="tu@email.com">											
-<label class="block text-sm font-semibold mb-2">Contraseña</label>											
-<input type="password" id="coach-pass" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500 text-white" placeholder="••••••••">											
-<button onclick="entrarPanel()" id="btn-entrar" type="button" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors">Entrar</button>											
-<p id="lock-error" class="text-red-400 text-sm text-center mt-3 hidden"></p>											
-</div>											
-</div>											
-											
-<!-- PANEL PRINCIPAL -->											
-<div id="panel-screen" class="hidden-screen p-6 min-h-screen flex flex-col">											
-<header class="flex justify-between items-center mb-8 pb-4 border-b border-zinc-800 flex-wrap gap-3">											
-<h1 class="text-3xl font-bold text-blue-500">FitCoach PRO</h1>											
-<div class="flex gap-3">											
-<button onclick="cargarDatos()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold transition-colors">											
-↻ Sincronizar											
-</button>											
-<button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold transition-colors">											
-⬇ Exportar a Excel											
-</button>											
-<button onclick="salirPanel()" class="bg-zinc-800 border border-zinc-700 text-zinc-300 px-4 py-2 rounded-lg font-semibold transition-colors">Salir</button>											
-</div>											
-</header>											
-											
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">											
-<div class="glass p-6 rounded-xl flex flex-col">											
-<h2 class="text-xl font-semibold mb-4 text-zinc-200">Directorio de Clientes</h2>											
-<div id="lista-clientes" class="flex-1 overflow-y-auto space-y-3">											
-<p class="text-zinc-500 italic">Sincronizando...</p>											
-</div>											
-</div>											
-											
-<div class="glass p-6 rounded-xl flex flex-col">											
-<h2 class="text-xl font-semibold mb-4 text-zinc-200">Últimos Entrenamientos</h2>											
-<div id="feed-entrenos" class="flex-1 overflow-y-auto space-y-3">											
-<p class="text-zinc-500 italic">Esperando datos...</p>											
-</div>											
-</div>											
-</div>											
-</div>											
-											
-<script>											
-const SUPABASE_URL = "https://cjwlalyopwinwycidblv.supabase.co";											
-const SUPABASE_ANON_KEY = "sb_publishable_1JhsRYnn7PIpoPWfjc8oOw_6Uhe0tuD";											
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);											
-											
-let clientesCache = [];											
-let entrenosCache = [];											
-											
-async function entrarPanel() {											
-const email = document.getElementById('coach-email').value.trim();											
-const password = document.getElementById('coach-pass').value.trim();											
-const errorEl = document.getElementById('lock-error');											
-const btn = document.getElementById('btn-entrar');											
-errorEl.classList.add('hidden');											
-											
-if (!email || !password) {											
-errorEl.innerText = "Completa ambos campos";											
-errorEl.classList.remove('hidden');											
-return;											
-}											
-											
-btn.innerText = "Verificando...";											
-btn.disabled = true;											
-											
-try {											
-const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });											
-if (error) {											
-throw new Error(error.message);											
-}											
-											
-// Validación directa de acceso											
-document.getElementById('lock-screen').classList.add('hidden-screen');											
-document.getElementById('panel-screen').classList.remove('hidden-screen');											
-cargarDatos();											
-} catch (e) {											
-errorEl.innerText = "Error: " + e.message;											
-errorEl.classList.remove('hidden');											
-} finally {											
-btn.innerText = "Entrar";											
-btn.disabled = false;											
-}											
-}											
-											
-async function salirPanel() {											
-await supabaseClient.auth.signOut();											
-document.getElementById('panel-screen').classList.add('hidden-screen');											
-document.getElementById('lock-screen').classList.remove('hidden-screen');											
-}											
-											
-async function cargarDatos() {											
-document.getElementById('lista-clientes').innerHTML = '<p class="text-blue-400">Cargando...</p>';											
-											
-const { data: clientes, error: e1 } = await supabaseClient											
-.from('profiles')											
-.select('email, full_name, payment_status');											
-											
-const { data: entrenos, error: e2 } = await supabaseClient											
-.from('workouts')											
-.select('date, routine_name, duration, rpe')											
-.order('date', { ascending: false })											
-.limit(50);											
-											
-if (e1 || e2) {											
-console.error("Error al cargar:", e1 || e2);											
-}											
-											
-clientesCache = clientes || [];											
-entrenosCache = entrenos || [];											
-renderizarClientes(clientesCache);											
-renderizarEntrenos(entrenosCache);											
-}											
-											
-function renderizarClientes(clientes) {											
-let html = '';											
-clientes.forEach(c => {											
-html += `											
-<div class="bg-zinc-800 p-4 rounded-lg flex justify-between items-center">											
-<div>											
-<p class="font-bold">${c.full_name || 'Sin nombre'}</p>											
-<p class="text-sm text-zinc-400">${c.email}</p>											
-</div>											
-<span class="text-green-400 text-sm font-semibold">${c.payment_status || 'Al día'}</span>											
-</div>`;											
-});											
-document.getElementById('lista-clientes').innerHTML = html || '<p class="text-zinc-500">No hay clientes registrados.</p>';											
-}											
-											
-function renderizarEntrenos(entrenos) {											
-let html = '';											
-entrenos.forEach(e => {											
-const fecha = new Date(e.date).toLocaleDateString();											
-html += `											
-<div class="bg-zinc-800 p-4 border-l-4 border-blue-500 rounded-r-lg">											
-<p class="text-xs text-zinc-400">${fecha}</p>											
-<p class="font-bold text-blue-100">${e.routine_name}</p>											
-<p class="text-sm text-zinc-300 mt-1">Dificultad (RPE): ${e.rpe ?? '—'}/10</p>											
-</div>`;											
-});											
-document.getElementById('feed-entrenos').innerHTML = html || '<p class="text-zinc-500">No hay entrenamientos recientes.</p>';											
-}											
-											
-function exportarExcel() {											
-if (clientesCache.length === 0 && entrenosCache.length === 0) {											
-alert("Primero sincroniza los datos.");											
-return;											
-}											
-const wb = XLSX.utils.book_new();											
-XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(clientesCache), "Clientes");											
-XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(entrenosCache), "Entrenamientos");											
-XLSX.writeFile(wb, `FitCoach_Backup.xlsx`);											
-}											
-											
-// Auto-login si ya hay sesión activa											
-(async () => {											
-const { data: { user } } = await supabaseClient.auth.getUser();											
-if (user) {											
-document.getElementById('lock-screen').classList.add('hidden-screen');											
-document.getElementById('panel-screen').classList.remove('hidden-screen');											
-cargarDatos();											
-}											
-})();											
-</script>											
-</body>											
-</html>											
+<!DOCTYPE html>															
+<html lang="es">															
+<head>															
+<meta charset="UTF-8">															
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">															
+<title>FitCoach - Centro de Mando Pro</title>															
+<script src="https://cdn.tailwindcss.com"></script>															
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>															
+<style>															
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');															
+body { font-family: 'Inter', sans-serif; background-color: #000000; color: #ffffff; overscroll-behavior-y: none; }															
+::-webkit-scrollbar { display: none; }															
+.glass-nav { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.05); }															
+.fade-in { animation: fadeIn 0.3s ease-in-out; }															
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }															
+.slide-in-right { transform: translateX(0%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }															
+.slide-out-right { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }															
+.hidden-screen { display: none !important; }															
+</style>															
+</head>															
+<body class="flex justify-center items-center h-screen m-0 bg-zinc-950">															
+															
+<!-- 1. PANTALLA DE LOGIN (SUPABASE) -->															
+<div id="lock-screen" class="w-full max-w-[430px] h-[100dvh] bg-black absolute z-50 flex flex-col justify-center items-center p-6 shadow-2xl border-x border-zinc-900">															
+<h1 class="text-3xl font-extrabold text-blue-500 mb-2">FitCoach PRO</h1>															
+<p class="text-xs text-zinc-400 mb-8 text-center">Centro de Mando del Entrenador</p>															
+<div class="w-full bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-xl">															
+<label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-zinc-400">Email</label>															
+<input type="email" id="coach-email" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-blue-500 text-white text-sm" placeholder="tu@email.com">															
+<label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-zinc-400">Contraseña</label>															
+<input type="password" id="coach-pass" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:border-blue-500 text-white text-sm" placeholder="••••••••">															
+<button onclick="entrarPanel()" id="btn-entrar" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-colors text-sm shadow-lg shadow-blue-600/30">Entrar al Panel</button>															
+<p id="lock-error" class="text-red-400 text-xs text-center mt-3 hidden font-semibold"></p>															
+</div>															
+</div>															
+															
+<!-- 2. APLICACIÓN PRINCIPAL (ESTILO APP MÓVIL) -->															
+<div id="panel-screen" class="hidden-screen w-full max-w-[430px] h-[100dvh] bg-black relative overflow-hidden flex flex-col shadow-2xl border-x border-zinc-900">															
+															
+<!-- CABECERA FIJA -->															
+<header class="px-5 py-4 flex justify-between items-center sticky top-0 bg-black/95 backdrop-blur z-20 border-b border-zinc-900">															
+<div>															
+<h1 class="text-lg font-extrabold text-white tracking-tight">Centro de Mando</h1>															
+<p class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-0.5" id="header-subtitle">Feed General</p>															
+</div>															
+<div class="flex items-center gap-3">															
+<button onclick="salirPanel()" class="text-[10px] bg-zinc-900 text-zinc-400 border border-zinc-800 px-3 py-1.5 rounded-lg hover:text-white">Salir</button>															
+<div class="w-8 h-8 bg-blue-950 rounded-full flex items-center justify-center border border-blue-600/50 text-xs">🧔🏻‍♂️</div>															
+</div>															
+</header>															
+															
+<!-- CONTENEDOR PRINCIPAL DE VISTAS (4 PESTAÑAS) -->															
+<div class="flex-1 overflow-y-auto pb-28 relative z-10" id="main-scroll">															
+															
+<!-- PESTAÑA 1: HOME (Feed General) -->															
+<div id="tab-home" class="block fade-in px-5 py-4">															
+<h2 class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-4">Actividad Reciente (Supabase)</h2>															
+<div id="feed-entrenos" class="space-y-3">															
+<p class="text-xs text-zinc-500 italic">Sincronizando entrenamientos...</p>															
+</div>															
+</div>															
+															
+<!-- PESTAÑA 2: CLIENTES -->															
+<div id="tab-clients" class="hidden fade-in px-5 py-4">															
+<div class="flex justify-between items-center mb-4">															
+<h2 class="text-xl font-extrabold text-white">Directorio</h2>															
+</div>															
+<div class="space-y-3" id="lista-clientes">															
+<p class="text-xs text-zinc-500 italic">Cargando clientes...</p>															
+</div>															
+</div>															
+															
+<!-- PESTAÑA 3: LABORATORIO -->															
+<div id="tab-lab" class="hidden fade-in px-5 py-4">															
+<h2 class="text-xl font-extrabold text-white mb-6">El Laboratorio</h2>															
+<button onclick="alert('Creador de rutinas activo')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs py-3.5 rounded-xl mb-6 shadow-lg shadow-blue-600/20">															
+#ERROR!															
+</button>															
+<div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 flex items-center justify-between">															
+<div><h4 class="font-bold text-white text-sm">Biblioteca de Ejercicios</h4><p class="text-[10px] text-zinc-400">Sincronizado con Supabase</p></div>															
+<div class="text-xl">📚</div>															
+</div>															
+</div>															
+															
+<!-- PESTAÑA 4: BUZÓN -->															
+<div id="tab-inbox" class="hidden fade-in px-5 py-4">															
+<h2 class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-4">Mensajes y Dudas</h2>															
+<div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 text-center">															
+<p class="text-xs text-zinc-400">Buzón limpio. No hay incidencias técnicas pendientes.</p>															
+</div>															
+</div>															
+</div>															
+															
+<!-- NAV INFERIOR (ESTILO LYFT / APP NATIVA) -->															
+<nav class="glass-nav absolute bottom-0 w-full flex justify-between items-center px-4 py-3 z-20 pb-6">															
+<button onclick="switchTab('tab-home', 'Feed General')" id="nav-home" class="flex flex-col items-center text-blue-400 w-1/4 transition-colors"><span class="text-xl mb-1">⌂</span><span class="text-[10px] font-bold">Home</span></button>															
+<button onclick="switchTab('tab-clients', 'Gestión de Clientes')" id="nav-clients" class="flex flex-col items-center text-zinc-500 hover:text-zinc-300 w-1/4 transition-colors"><span class="text-xl mb-1">👥</span><span class="text-[10px] font-bold">Clientes</span></button>															
+<button onclick="switchTab('tab-lab', 'Creador de Rutinas')" id="nav-lab" class="flex flex-col items-center text-zinc-500 hover:text-zinc-300 w-1/4 transition-colors"><span class="text-xl mb-1">🧪</span><span class="text-[10px] font-bold">Lab</span></button>															
+<button onclick="switchTab('tab-inbox', 'Mensajes y Alertas')" id="nav-inbox" class="flex flex-col items-center text-zinc-500 hover:text-zinc-300 w-1/4 transition-colors relative"><span class="text-xl mb-1">💬</span><span class="text-[10px] font-bold">Buzón</span></button>															
+</nav>															
+</div>															
+															
+<!-- SCRIPT DE CONEXIÓN Y LÓGICA -->															
+<script>															
+const SUPABASE_URL = "https://cjwlalyopwinwycidblv.supabase.co";															
+const SUPABASE_ANON_KEY = "sb_publishable_1JhsRYnn7PIpoPWfjc8oOw_6Uhe0tuD";															
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);															
+															
+function switchTab(tabId, subtitle) {															
+['tab-home', 'tab-clients', 'tab-lab', 'tab-inbox'].forEach(id => {															
+document.getElementById(id).style.display = id === tabId ? 'block' : 'none';															
+});															
+const act = 'flex flex-col items-center text-blue-400 w-1/4 transition-colors';															
+const inact = 'flex flex-col items-center text-zinc-500 hover:text-zinc-300 w-1/4 transition-colors';															
+document.getElementById('nav-home').className = tabId === 'tab-home' ? act : inact;															
+document.getElementById('nav-clients').className = tabId === 'tab-clients' ? act : inact;															
+document.getElementById('nav-lab').className = tabId === 'tab-lab' ? act : inact;															
+document.getElementById('nav-inbox').className = tabId === 'tab-inbox' ? act : inact;															
+document.getElementById('header-subtitle').innerText = subtitle;															
+document.getElementById('main-scroll').scrollTop = 0;															
+}															
+															
+async function entrarPanel() {															
+const email = document.getElementById('coach-email').value.trim();															
+const password = document.getElementById('coach-pass').value.trim();															
+const errorEl = document.getElementById('lock-error');															
+const btn = document.getElementById('btn-entrar');															
+errorEl.classList.add('hidden');															
+															
+if (!email || !password) {															
+errorEl.innerText = "Completa ambos campos";															
+errorEl.classList.remove('hidden');															
+return;															
+}															
+															
+btn.innerText = "Verificando...";															
+btn.disabled = true;															
+															
+try {															
+const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });															
+if (error) throw new Error(error.message);															
+															
+document.getElementById('lock-screen').classList.add('hidden-screen');															
+document.getElementById('panel-screen').classList.remove('hidden-screen');															
+cargarDatosDesdeSupabase();															
+} catch (e) {															
+errorEl.innerText = "Error: " + e.message;															
+errorEl.classList.remove('hidden');															
+} finally {															
+btn.innerText = "Entrar al Panel";															
+btn.disabled = false;															
+}															
+}															
+															
+async function salirPanel() {															
+await supabaseClient.auth.signOut();															
+document.getElementById('panel-screen').classList.add('hidden-screen');															
+document.getElementById('lock-screen').classList.remove('hidden-screen');															
+}															
+															
+async function cargarDatosDesdeSupabase() {															
+// 1. Cargar Clientes															
+const { data: clientes } = await supabaseClient															
+.from('profiles')															
+.select('email, full_name, payment_status')															
+.eq('role', 'client');															
+															
+let htmlClientes = '';															
+(clientes || []).forEach(c => {															
+htmlClientes += `															
+<div class="bg-zinc-900/60 border border-zinc-800 p-4 rounded-2xl flex justify-between items-center">															
+<div>															
+<p class="font-bold text-sm text-white">${c.full_name || 'Atleta'}</p>															
+<p class="text-xs text-zinc-400">${c.email}</p>															
+</div>															
+<span class="text-emerald-400 text-xs font-bold bg-emerald-950/50 px-2.5 py-1 rounded-full border border-emerald-800/50">${c.payment_status || 'Al día'}</span>															
+</div>`;															
+});															
+document.getElementById('lista-clientes').innerHTML = htmlClientes || '<p class="text-xs text-zinc-500">No hay clientes todavía.</p>';															
+															
+// 2. Cargar Entrenamientos															
+const { data: entrenos } = await supabaseClient															
+.from('workouts')															
+.select('date, routine_name, duration, rpe')															
+.order('date', { ascending: false })															
+.limit(20);															
+															
+let htmlEntrenos = '';															
+(entrenos || []).forEach(e => {															
+const fecha = new Date(e.date).toLocaleDateString();															
+htmlEntrenos += `															
+<div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">															
+<p class="text-[10px] text-zinc-500 mb-1">${fecha}</p>															
+<h4 class="font-bold text-emerald-400 text-sm mb-2">${e.routine_name}</h4>															
+<div class="flex justify-between text-xs text-zinc-400">															
+<div><span class="block text-[9px] uppercase">Duración</span><span class="font-bold text-white">${e.duration || '—'}</span></div>															
+<div><span class="block text-[9px] uppercase">RPE</span><span class="font-bold text-yellow-500">${e.rpe ?? '—'}/10</span></div>															
+</div>															
+</div>`;															
+});															
+document.getElementById('feed-entrenos').innerHTML = htmlEntrenos || '<p class="text-xs text-zinc-500">No hay entrenamientos recientes.</p>';															
+}															
+															
+// Auto-login si ya hay sesión activa															
+(async () => {															
+const { data: { user } } = await supabaseClient.auth.getUser();															
+if (user) {															
+document.getElementById('lock-screen').classList.add('hidden-screen');															
+document.getElementById('panel-screen').classList.remove('hidden-screen');															
+cargarDatosDesdeSupabase();															
+}															
+})();															
+</script>															
+</body>															
+</html>															
