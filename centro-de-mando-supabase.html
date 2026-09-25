@@ -1,215 +1,225 @@
-<!DOCTYPE html>												
-<html lang="es">												
-<head>												
-<meta charset="UTF-8">												
-<meta name="viewport" content="width=device-width, initial-scale=1.0">												
-<title>FitCoach - Centro de Mando</title>												
-<script src="https://cdn.tailwindcss.com"></script>												
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>												
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>												
-<style>												
-body { background-color: #09090b; color: #f4f4f5; }												
-.glass { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(10px); border: 1px solid #27272a; }												
-.hidden-screen { display: none; }												
-</style>												
-</head>												
-<body class="min-h-screen">												
-												
-<!-- PANTALLA DE LOGIN -->												
-<div id="lock-screen" class="min-h-screen flex flex-col justify-center items-center p-6">												
-<h1 class="text-3xl font-bold text-blue-500 mb-6">FitCoach PRO</h1>												
-<div class="w-full max-w-sm bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-xl">												
-<label class="block text-sm font-semibold mb-2">Email</label>												
-<input type="email" id="coach-email" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500 text-white" placeholder="tu@email.com">												
-<label class="block text-sm font-semibold mb-2">Contraseña</label>												
-<input type="password" id="coach-pass" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500 text-white" placeholder="••••••••">												
-<button onclick="entrarPanel()" id="btn-entrar" type="button" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors">Entrar</button>												
-<p id="lock-error" class="text-red-400 text-sm text-center mt-3 hidden"></p>												
-</div>												
-</div>												
-												
-<!-- PANEL PRINCIPAL -->												
-<div id="panel-screen" class="hidden-screen p-6 min-h-screen flex flex-col">												
-<header class="flex justify-between items-center mb-8 pb-4 border-b border-zinc-800 flex-wrap gap-3">												
-<h1 class="text-3xl font-bold text-blue-500">FitCoach PRO</h1>												
-<div class="flex gap-3">												
-<button onclick="cargarDatos()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold transition-colors">												
-↻ Sincronizar												
-</button>												
-<button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold transition-colors">												
-⬇ Exportar a Excel												
-</button>												
-<button onclick="salirPanel()" class="bg-zinc-800 border border-zinc-700 text-zinc-300 px-4 py-2 rounded-lg font-semibold transition-colors">Salir</button>												
-</div>												
-</header>												
-												
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">												
-<div class="glass p-6 rounded-xl flex flex-col">												
-<h2 class="text-xl font-semibold mb-4 text-zinc-200">Directorio de Clientes</h2>												
-<div id="lista-clientes" class="flex-1 overflow-y-auto space-y-3">												
-<p class="text-zinc-500 italic">Sincronizando...</p>												
-</div>												
-</div>												
-												
-<div class="glass p-6 rounded-xl flex flex-col">												
-<h2 class="text-xl font-semibold mb-4 text-zinc-200">Últimos Entrenamientos</h2>												
-<div id="feed-entrenos" class="flex-1 overflow-y-auto space-y-3">												
-<p class="text-zinc-500 italic">Esperando datos...</p>												
-</div>												
-</div>												
-</div>												
-</div>												
-												
-<script>												
-const SUPABASE_URL = "https://cjwlalyopwinwycidblv.supabase.co";												
-const SUPABASE_ANON_KEY = "sb_publishable_1JhsRYnn7PIpoPWfjc8oOw_6Uhe0tuD";												
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);												
-												
-let clientesCache = [];												
-let entrenosCache = [];												
-												
-async function entrarPanel() {												
-const email = document.getElementById('coach-email').value.trim();												
-const password = document.getElementById('coach-pass').value.trim();												
-const errorEl = document.getElementById('lock-error');												
-const btn = document.getElementById('btn-entrar');												
-errorEl.classList.add('hidden');												
-												
-if (!email || !password) {												
-errorEl.innerText = "Completa ambos campos";												
-errorEl.classList.remove('hidden');												
-return;												
-}												
-												
-btn.innerText = "Verificando...";												
-btn.disabled = true;												
-												
-try {												
-const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });												
-if (error) {												
-errorEl.innerText = "Error de login: " + error.message;												
-errorEl.classList.remove('hidden');												
-return;												
-}												
-												
-const { data: perfil, error: perfilError } = await supabaseClient.from('profiles').select('role').eq('id', data.user.id).single();												
-if (perfilError || !perfil || perfil.role !== 'coach') {												
-errorEl.innerText = "Esta cuenta no tiene permisos de entrenador.";												
-errorEl.classList.remove('hidden');												
-await supabaseClient.auth.signOut();												
-return;												
-}												
-												
-document.getElementById('lock-screen').classList.add('hidden-screen');												
-document.getElementById('panel-screen').classList.remove('hidden-screen');												
-cargarDatos();												
-} catch (e) {												
-errorEl.innerText = "Error inesperado: " + e.message;												
-errorEl.classList.remove('hidden');												
-} finally {												
-btn.innerText = "Entrar";												
-btn.disabled = false;												
-}												
-}												
-												
-async function salirPanel() {												
-await supabaseClient.auth.signOut();												
-document.getElementById('panel-screen').classList.add('hidden-screen');												
-document.getElementById('lock-screen').classList.remove('hidden-screen');												
-}												
-												
-async function cargarDatos() {												
-document.getElementById('lista-clientes').innerHTML = '<p class="text-blue-400">Cargando...</p>';												
-												
-const { data: clientes, error: e1 } = await supabaseClient												
-.from('profiles')												
-.select('email, full_name, payment_status')												
-.eq('role', 'client');												
-												
-const { data: entrenos, error: e2 } = await supabaseClient												
-.from('workouts')												
-.select('date, routine_name, duration, rpe, profiles(full_name)')												
-.order('date', { ascending: false })												
-.limit(50);												
-												
-if (e1 || e2) {												
-alert("Error al cargar datos. Revisa tu conexión o vuelve a iniciar sesión.");												
-return;												
-}												
-												
-clientesCache = clientes || [];												
-entrenosCache = entrenos || [];												
-renderizarClientes(clientesCache);												
-renderizarEntrenos(entrenosCache);												
-}												
-												
-function renderizarClientes(clientes) {												
-let html = '';												
-clientes.forEach(c => {												
-const estado = c.payment_status || 'al_dia';												
-const colorEstado = estado.toLowerCase().includes('al_dia') || estado.toLowerCase().includes('al día') ? 'text-green-400' : 'text-red-400';												
-html += `												
-<div class="bg-zinc-800 p-4 rounded-lg flex justify-between items-center">												
-<div>												
-<p class="font-bold">${c.full_name}</p>												
-<p class="text-sm text-zinc-400">${c.email}</p>												
-</div>												
-<span class="${colorEstado} text-sm font-semibold">${estado}</span>												
-</div>`;												
-});												
-document.getElementById('lista-clientes').innerHTML = html || '<p class="text-zinc-500">No hay clientes registrados aún.</p>';												
-}												
-												
-function renderizarEntrenos(entrenos) {												
-let html = '';												
-entrenos.forEach(e => {												
-const fecha = new Date(e.date).toLocaleDateString();												
-const cliente = e.profiles ? e.profiles.full_name : '—';												
-html += `												
-<div class="bg-zinc-800 p-4 border-l-4 border-blue-500 rounded-r-lg">												
-<p class="text-xs text-zinc-400">${fecha}</p>												
-<p class="font-bold text-blue-100">${e.routine_name} <span class="text-zinc-500 font-normal">por</span> ${cliente}</p>												
-<p class="text-sm text-zinc-300 mt-1">Dificultad (RPE): ${e.rpe ?? '—'}/10</p>												
-</div>`;												
-});												
-document.getElementById('feed-entrenos').innerHTML = html || '<p class="text-zinc-500">No hay entrenamientos recientes.</p>';												
-}												
-												
-function exportarExcel() {												
-if (clientesCache.length === 0 && entrenosCache.length === 0) {												
-alert("Primero sincroniza los datos.");												
-return;												
-}												
-const hojaClientes = clientesCache.map(c => ({												
-Nombre: c.full_name,												
-Email: c.email,												
-Estado_Pago: c.payment_status												
-}));												
-const hojaEntrenos = entrenosCache.map(e => ({												
-Fecha: e.date,												
-Cliente: e.profiles ? e.profiles.full_name : '',												
-Rutina: e.routine_name,												
-Duracion: e.duration,												
-RPE: e.rpe												
-}));												
-const wb = XLSX.utils.book_new();												
-XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaClientes), "Clientes");												
-XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaEntrenos), "Entrenamientos");												
-const fechaHoy = new Date().toISOString().split('T')[0];												
-XLSX.writeFile(wb, `FitCoach_Backup_${fechaHoy}.xlsx`);												
-}												
-												
-(async () => {												
-const { data: { user } } = await supabaseClient.auth.getUser();												
-if (user) {												
-const { data: perfil } = await supabaseClient.from('profiles').select('role').eq('id', user.id).single();												
-if (perfil && perfil.role === 'coach') {												
-document.getElementById('lock-screen').classList.add('hidden-screen');												
-document.getElementById('panel-screen').classList.remove('hidden-screen');												
-cargarDatos();												
-}												
-}												
-})();												
-</script>												
-</body>												
-</html>									
+<!DOCTYPE html>											
+<html lang="es">											
+<head>											
+<meta charset="UTF-8">											
+<meta name="viewport" content="width=device-width, initial-scale=1.0">											
+<title>FitCoach - Centro de Mando</title>											
+<script src="https://cdn.tailwindcss.com"></script>											
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>											
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>											
+<style>											
+body { background-color: #09090b; color: #f4f4f5; }											
+.glass { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(10px); border: 1px solid #27272a; }											
+.hidden-screen { display: none; }											
+</style>											
+</head>											
+<body class="min-h-screen">											
+											
+<!-- PANTALLA DE LOGIN -->											
+<div id="lock-screen" class="min-h-screen flex flex-col justify-center items-center p-6">											
+<h1 class="text-3xl font-bold text-blue-500 mb-6">FitCoach PRO</h1>											
+<div class="w-full max-w-sm bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-xl">											
+<label class="block text-sm font-semibold mb-2">Email</label>											
+<input type="email" id="coach-email" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500 text-white" placeholder="tu@email.com">											
+<label class="block text-sm font-semibold mb-2">Contraseña</label>											
+<input type="password" id="coach-pass" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500 text-white" placeholder="••••••••">											
+<button onclick="entrarPanel()" id="btn-entrar" type="button" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors">Entrar</button>											
+<p id="lock-error" class="text-red-400 text-sm text-center mt-3 hidden"></p>											
+</div>											
+</div>											
+											
+<!-- PANEL PRINCIPAL -->											
+<div id="panel-screen" class="hidden-screen p-6 min-h-screen flex flex-col">											
+<header class="flex justify-between items-center mb-8 pb-4 border-b border-zinc-800 flex-wrap gap-3">											
+<h1 class="text-3xl font-bold text-blue-500">FitCoach PRO</h1>											
+<div class="flex gap-3">											
+<button onclick="cargarDatos()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold transition-colors">											
+↻ Sincronizar											
+</button>											
+<button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold transition-colors">											
+⬇ Exportar a Excel											
+</button>											
+<button onclick="salirPanel()" class="bg-zinc-800 border border-zinc-700 text-zinc-300 px-4 py-2 rounded-lg font-semibold transition-colors">Salir</button>											
+</div>											
+</header>											
+											
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">											
+<div class="glass p-6 rounded-xl flex flex-col">											
+<h2 class="text-xl font-semibold mb-4 text-zinc-200">Directorio de Clientes</h2>											
+<div id="lista-clientes" class="flex-1 overflow-y-auto space-y-3">											
+<p class="text-zinc-500 italic">Sincronizando...</p>											
+</div>											
+</div>											
+											
+<div class="glass p-6 rounded-xl flex flex-col">											
+<h2 class="text-xl font-semibold mb-4 text-zinc-200">Últimos Entrenamientos</h2>											
+<div id="feed-entrenos" class="flex-1 overflow-y-auto space-y-3">											
+<p class="text-zinc-500 italic">Esperando datos...</p>											
+</div>											
+</div>											
+</div>											
+</div>											
+											
+<script>											
+const SUPABASE_URL = "https://cjwlalyopwinwycidblv.supabase.co";											
+const SUPABASE_ANON_KEY = "sb_publishable_1JhsRYnn7PIpoPWfjc8oOw_6Uhe0tuD";											
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);											
+											
+let clientesCache = [];											
+let entrenosCache = [];											
+											
+async function entrarPanel() {											
+const email = document.getElementById('coach-email').value.trim();											
+const password = document.getElementById('coach-pass').value.trim();											
+const errorEl = document.getElementById('lock-error');											
+const btn = document.getElementById('btn-entrar');											
+errorEl.classList.add('hidden');											
+											
+if (!email || !password) {											
+errorEl.innerText = "Completa ambos campos";											
+errorEl.classList.remove('hidden');											
+return;											
+}											
+											
+btn.innerText = "Verificando...";											
+btn.disabled = true;											
+											
+try {											
+// 1. Autenticación con Supabase Auth											
+const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });											
+if (error) {											
+throw new Error("Credenciales inválidas: " + error.message);											
+}											
+											
+// 2. Verificación estricta del rol en la tabla profiles											
+const { data: perfil, error: perfilError } = await supabaseClient											
+.from('profiles')											
+.select('role')											
+.eq('id', data.user.id)											
+.single();											
+											
+if (perfilError || !perfil) {											
+throw new Error("No se encontró el perfil de usuario en la base de datos.");											
+}											
+											
+if (perfil.role !== 'coach') {											
+await supabaseClient.auth.signOut();											
+throw new Error("Acceso denegado: esta cuenta no tiene permisos de entrenador.");											
+}											
+											
+// 3. Éxito: Cambio de pantalla											
+document.getElementById('lock-screen').classList.add('hidden-screen');											
+document.getElementById('panel-screen').classList.remove('hidden-screen');											
+cargarDatos();											
+											
+} catch (e) {											
+errorEl.innerText = e.message;											
+errorEl.classList.remove('hidden');											
+} finally {											
+btn.innerText = "Entrar";											
+btn.disabled = false;											
+}											
+}											
+											
+async function salirPanel() {											
+await supabaseClient.auth.signOut();											
+document.getElementById('panel-screen').classList.add('hidden-screen');											
+document.getElementById('lock-screen').classList.remove('hidden-screen');											
+}											
+											
+async function cargarDatos() {											
+document.getElementById('lista-clientes').innerHTML = '<p class="text-blue-400">Cargando...</p>';											
+											
+const { data: clientes, error: e1 } = await supabaseClient											
+.from('profiles')											
+.select('email, full_name, payment_status')											
+.eq('role', 'client');											
+											
+const { data: entrenos, error: e2 } = await supabaseClient											
+.from('workouts')											
+.select('date, routine_name, duration, rpe, profiles(full_name)')											
+.order('date', { ascending: false })											
+.limit(50);											
+											
+if (e1 || e2) {											
+alert("Error al cargar datos. Revisa tu conexión o vuelve a iniciar sesión.");											
+return;											
+}											
+											
+clientesCache = clientes || [];											
+entrenosCache = entrenos || [];											
+renderizarClientes(clientesCache);											
+renderizarEntrenos(entrenosCache);											
+}											
+											
+function renderizarClientes(clientes) {											
+let html = '';											
+clientes.forEach(c => {											
+const estado = c.payment_status || 'al_dia';											
+const colorEstado = estado.toLowerCase().includes('al_dia') || estado.toLowerCase().includes('al día') ? 'text-green-400' : 'text-red-400';											
+html += `											
+<div class="bg-zinc-800 p-4 rounded-lg flex justify-between items-center">											
+<div>											
+<p class="font-bold">${c.full_name}</p>											
+<p class="text-sm text-zinc-400">${c.email}</p>											
+</div>											
+<span class="${colorEstado} text-sm font-semibold">${estado}</span>											
+</div>`;											
+});											
+document.getElementById('lista-clientes').innerHTML = html || '<p class="text-zinc-500">No hay clientes registrados aún.</p>';											
+}											
+											
+function renderizarEntrenos(entrenos) {											
+let html = '';											
+entrenos.forEach(e => {											
+const fecha = new Date(e.date).toLocaleDateString();											
+const cliente = e.profiles ? e.profiles.full_name : '—';											
+html += `											
+<div class="bg-zinc-800 p-4 border-l-4 border-blue-500 rounded-r-lg">											
+<p class="text-xs text-zinc-400">${fecha}</p>											
+<p class="font-bold text-blue-100">${e.routine_name} <span class="text-zinc-500 font-normal">por</span> ${cliente}</p>											
+<p class="text-sm text-zinc-300 mt-1">Dificultad (RPE): ${e.rpe ?? '—'}/10</p>											
+</div>`;											
+});											
+document.getElementById('feed-entrenos').innerHTML = html || '<p class="text-zinc-500">No hay entrenamientos recientes.</p>';											
+}											
+											
+function exportarExcel() {											
+if (clientesCache.length === 0 && entrenosCache.length === 0) {											
+alert("Primero sincroniza los datos.");											
+return;											
+}											
+const hojaClientes = clientesCache.map(c => ({											
+Nombre: c.full_name,											
+Email: c.email,											
+Estado_Pago: c.payment_status											
+}));											
+const hojaEntrenos = entrenosCache.map(e => ({											
+Fecha: e.date,											
+Cliente: e.profiles ? e.profiles.full_name : '',											
+Rutina: e.routine_name,											
+Duracion: e.duration,											
+RPE: e.rpe											
+}));											
+const wb = XLSX.utils.book_new();											
+XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaClientes), "Clientes");											
+XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaEntrenos), "Entrenamientos");											
+const fechaHoy = new Date().toISOString().split('T')[0];											
+XLSX.writeFile(wb, `FitCoach_Backup_${fechaHoy}.xlsx`);											
+}											
+											
+// Auto-login si ya hay sesión activa											
+(async () => {											
+const { data: { user } } = await supabaseClient.auth.getUser();											
+if (user) {											
+const { data: perfil } = await supabaseClient.from('profiles').select('role').eq('id', user.id).single();											
+if (perfil && perfil.role === 'coach') {											
+document.getElementById('lock-screen').classList.add('hidden-screen');											
+document.getElementById('panel-screen').classList.remove('hidden-screen');											
+cargarDatos();											
+}											
+}											
+})();											
+</script>											
+</body>											
+</html>											
