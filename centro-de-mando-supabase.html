@@ -19,10 +19,9 @@ body { font-family: 'Inter', sans-serif; background-color: #000000; color: #ffff
 </head>											
 <body class="flex justify-center items-center h-[100dvh] m-0 bg-zinc-950 overflow-hidden">											
 											
-<!-- CONTENEDOR PRINCIPAL TIPO APP MÓVIL -->											
 <div class="w-full max-w-[430px] h-[100dvh] bg-black relative overflow-hidden flex flex-col shadow-2xl border-x border-zinc-900">											
 											
-<!-- =================== 1. PANTALLA DE LOGIN =================== -->											
+<!-- PANTALLA DE LOGIN -->											
 <div id="lock-screen" class="absolute inset-0 bg-black z-50 flex flex-col justify-center px-6 fade-in">											
 <div class="text-center mb-8">											
 <div class="w-16 h-16 bg-blue-600/10 rounded-2xl border border-blue-500/30 flex items-center justify-center mx-auto mb-4 text-2xl">🛡️</div>											
@@ -44,10 +43,9 @@ Entrar al Sistema
 </div>											
 </div>											
 											
-<!-- =================== 2. INTERFAZ PRINCIPAL (ESTILO LYFTA) =================== -->											
+<!-- INTERFAZ PRINCIPAL -->											
 <div id="panel-screen" class="hidden-screen flex-1 flex flex-col relative overflow-hidden">											
 											
-<!-- CABECERA DE LA APP -->											
 <header class="px-5 py-4 flex justify-between items-center bg-black/90 backdrop-blur z-20 border-b border-zinc-900 shrink-0">											
 <div>											
 <h1 class="text-lg font-extrabold text-white tracking-tight">Centro de Mando</h1>											
@@ -59,7 +57,6 @@ Entrar al Sistema
 </div>											
 </header>											
 											
-<!-- CONTENIDO CON PESTAÑAS NAVEGABLES -->											
 <div class="flex-1 overflow-y-auto pb-32 pt-2 px-5" id="main-scroll-area">											
 											
 <!-- PESTAÑA 1: HOME -->											
@@ -68,9 +65,8 @@ Entrar al Sistema
 <h2 class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Actividad en Directo</h2>											
 <span class="text-emerald-400 text-[10px] font-bold bg-emerald-950/40 border border-emerald-900/50 px-2 py-0.5 rounded-full">● Sincronizado</span>											
 </div>											
-											
 <div id="feed-entrenos" class="space-y-3">											
-<p class="text-xs text-zinc-500 italic">Cargando entrenamientos de tus atletas...</p>											
+<p class="text-xs text-zinc-500 italic">Cargando entrenamientos...</p>											
 </div>											
 </div>											
 											
@@ -91,7 +87,7 @@ Entrar al Sistema
 <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-5 mb-4 text-center">											
 <div class="text-3xl mb-2">🧪</div>											
 <h3 class="font-bold text-white text-sm mb-1">Laboratorio de Programación</h3>											
-<p class="text-xs text-zinc-400 mb-4">Diseña rutinas maestras y asígnalas a tus clientes al instante.</p>											
+<p class="text-xs text-zinc-400 mb-4">Diseña rutinas maestras y asígnalas al instante.</p>											
 <button onclick="alert('Módulo de laboratorio activo')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-xs transition-colors shadow-lg shadow-blue-600/20">+ Nueva Plantilla</button>											
 </div>											
 </div>											
@@ -101,13 +97,13 @@ Entrar al Sistema
 <h2 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 mt-2">Buzón y Dudas</h2>											
 <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-5 text-center">											
 <div class="text-3xl mb-2">💬</div>											
-<p class="text-xs text-zinc-400">No hay nuevas dudas o videos de técnica pendientes de revisión.</p>											
+<p class="text-xs text-zinc-400">No hay nuevas dudas o videos pendientes.</p>											
 </div>											
 </div>											
 											
 </div>											
 											
-<!-- BARRA DE NAVEGACIÓN INFERIOR (ESTILO LYFTA) -->											
+<!-- BARRA DE NAVEGACIÓN INFERIOR -->											
 <nav class="glass-nav absolute bottom-0 w-full flex justify-between items-center px-4 py-3 z-30 pb-6">											
 <button onclick="switchTab('tab-home', 'Resumen General')" id="nav-home" class="flex flex-col items-center text-blue-400 w-1/4 transition-colors">											
 <span class="text-xl mb-1">⌂</span><span class="text-[10px] font-bold">Home</span>											
@@ -126,7 +122,6 @@ Entrar al Sistema
 </div>											
 </div>											
 											
-<!-- SCRIPT DE CONEXIÓN Y UI -->											
 <script>											
 const SUPABASE_URL = "https://cjwlalyopwinwycidblv.supabase.co";											
 const SUPABASE_ANON_KEY = "sb_publishable_1JhsRYnn7PIpoPWfjc8oOw_6Uhe0tuD";											
@@ -170,7 +165,6 @@ try {
 const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });											
 if (error) throw new Error(error.message);											
 											
-// Ocultar login y mostrar la app móvil con diseño Lyfta											
 document.getElementById('lock-screen').classList.add('hidden-screen');											
 document.getElementById('panel-screen').classList.remove('hidden-screen');											
 cargarDatosSupabase();											
@@ -190,7 +184,6 @@ document.getElementById('lock-screen').classList.remove('hidden-screen');
 }											
 											
 async function cargarDatosSupabase() {											
-// Cargar Clientes											
 const { data: clientes } = await supabaseClient											
 .from('profiles')											
 .select('email, full_name, payment_status')											
@@ -210,7 +203,6 @@ htmlClientes += `
 });											
 document.getElementById('lista-clientes').innerHTML = htmlClientes || '<p class="text-xs text-zinc-500 text-center py-4">No hay clientes registrados.</p>';											
 											
-// Cargar Entrenamientos											
 const { data: entrenos } = await supabaseClient											
 .from('workouts')											
 .select('date, routine_name, duration, rpe')											
@@ -234,7 +226,6 @@ htmlEntrenos += `
 document.getElementById('feed-entrenos').innerHTML = htmlEntrenos || '<p class="text-xs text-zinc-500 text-center py-4">No hay entrenamientos recientes registrados.</p>';											
 }											
 											
-// Auto-login si ya hay sesión activa previa											
 (async () => {											
 const { data: { user } } = await supabaseClient.auth.getUser();											
 if (user) {											
@@ -245,4 +236,4 @@ cargarDatosSupabase();
 })();											
 </script>											
 </body>											
-</html>											
+</html>																					
