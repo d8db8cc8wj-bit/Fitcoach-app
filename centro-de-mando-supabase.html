@@ -85,35 +85,17 @@ btn.innerText = "Verificando...";
 btn.disabled = true;											
 											
 try {											
-// 1. Autenticación con Supabase Auth											
 const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });											
 if (error) {											
-throw new Error("Credenciales inválidas: " + error.message);											
+throw new Error(error.message);											
 }											
 											
-// 2. Verificación estricta del rol en la tabla profiles											
-const { data: perfil, error: perfilError } = await supabaseClient											
-.from('profiles')											
-.select('role')											
-.eq('id', data.user.id)											
-.single();											
-											
-if (perfilError || !perfil) {											
-throw new Error("No se encontró el perfil de usuario en la base de datos.");											
-}											
-											
-if (perfil.role !== 'coach') {											
-await supabaseClient.auth.signOut();											
-throw new Error("Acceso denegado: esta cuenta no tiene permisos de entrenador.");											
-}											
-											
-// 3. Éxito: Cambio de pantalla											
+// Validación directa de acceso											
 document.getElementById('lock-screen').classList.add('hidden-screen');											
 document.getElementById('panel-screen').classList.remove('hidden-screen');											
 cargarDatos();											
-											
 } catch (e) {											
-errorEl.innerText = e.message;											
+errorEl.innerText = "Error: " + e.message;											
 errorEl.classList.remove('hidden');											
 } finally {											
 btn.innerText = "Entrar";											
@@ -132,18 +114,16 @@ document.getElementById('lista-clientes').innerHTML = '<p class="text-blue-400">
 											
 const { data: clientes, error: e1 } = await supabaseClient											
 .from('profiles')											
-.select('email, full_name, payment_status')											
-.eq('role', 'client');											
+.select('email, full_name, payment_status');											
 											
 const { data: entrenos, error: e2 } = await supabaseClient											
 .from('workouts')											
-.select('date, routine_name, duration, rpe, profiles(full_name)')											
+.select('date, routine_name, duration, rpe')											
 .order('date', { ascending: false })											
 .limit(50);											
 											
 if (e1 || e2) {											
-alert("Error al cargar datos. Revisa tu conexión o vuelve a iniciar sesión.");											
-return;											
+console.error("Error al cargar:", e1 || e2);											
 }											
 											
 clientesCache = clientes || [];											
@@ -155,29 +135,26 @@ renderizarEntrenos(entrenosCache);
 function renderizarClientes(clientes) {											
 let html = '';											
 clientes.forEach(c => {											
-const estado = c.payment_status || 'al_dia';											
-const colorEstado = estado.toLowerCase().includes('al_dia') || estado.toLowerCase().includes('al día') ? 'text-green-400' : 'text-red-400';											
 html += `											
 <div class="bg-zinc-800 p-4 rounded-lg flex justify-between items-center">											
 <div>											
-<p class="font-bold">${c.full_name}</p>											
+<p class="font-bold">${c.full_name || 'Sin nombre'}</p>											
 <p class="text-sm text-zinc-400">${c.email}</p>											
 </div>											
-<span class="${colorEstado} text-sm font-semibold">${estado}</span>											
+<span class="text-green-400 text-sm font-semibold">${c.payment_status || 'Al día'}</span>											
 </div>`;											
 });											
-document.getElementById('lista-clientes').innerHTML = html || '<p class="text-zinc-500">No hay clientes registrados aún.</p>';											
+document.getElementById('lista-clientes').innerHTML = html || '<p class="text-zinc-500">No hay clientes registrados.</p>';											
 }											
 											
 function renderizarEntrenos(entrenos) {											
 let html = '';											
 entrenos.forEach(e => {											
 const fecha = new Date(e.date).toLocaleDateString();											
-const cliente = e.profiles ? e.profiles.full_name : '—';											
 html += `											
 <div class="bg-zinc-800 p-4 border-l-4 border-blue-500 rounded-r-lg">											
 <p class="text-xs text-zinc-400">${fecha}</p>											
-<p class="font-bold text-blue-100">${e.routine_name} <span class="text-zinc-500 font-normal">por</span> ${cliente}</p>											
+<p class="font-bold text-blue-100">${e.routine_name}</p>											
 <p class="text-sm text-zinc-300 mt-1">Dificultad (RPE): ${e.rpe ?? '—'}/10</p>											
 </div>`;											
 });											
@@ -189,35 +166,19 @@ if (clientesCache.length === 0 && entrenosCache.length === 0) {
 alert("Primero sincroniza los datos.");											
 return;											
 }											
-const hojaClientes = clientesCache.map(c => ({											
-Nombre: c.full_name,											
-Email: c.email,											
-Estado_Pago: c.payment_status											
-}));											
-const hojaEntrenos = entrenosCache.map(e => ({											
-Fecha: e.date,											
-Cliente: e.profiles ? e.profiles.full_name : '',											
-Rutina: e.routine_name,											
-Duracion: e.duration,											
-RPE: e.rpe											
-}));											
 const wb = XLSX.utils.book_new();											
-XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaClientes), "Clientes");											
-XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaEntrenos), "Entrenamientos");											
-const fechaHoy = new Date().toISOString().split('T')[0];											
-XLSX.writeFile(wb, `FitCoach_Backup_${fechaHoy}.xlsx`);											
+XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(clientesCache), "Clientes");											
+XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(entrenosCache), "Entrenamientos");											
+XLSX.writeFile(wb, `FitCoach_Backup.xlsx`);											
 }											
 											
 // Auto-login si ya hay sesión activa											
 (async () => {											
 const { data: { user } } = await supabaseClient.auth.getUser();											
 if (user) {											
-const { data: perfil } = await supabaseClient.from('profiles').select('role').eq('id', user.id).single();											
-if (perfil && perfil.role === 'coach') {											
 document.getElementById('lock-screen').classList.add('hidden-screen');											
 document.getElementById('panel-screen').classList.remove('hidden-screen');											
 cargarDatos();											
-}											
 }											
 })();											
 </script>											
