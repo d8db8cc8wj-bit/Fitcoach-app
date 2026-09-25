@@ -3,7 +3,7 @@
 <head>														
 <meta charset="UTF-8">														
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">														
-<title>FitCoach - App Cliente</title>														
+<title>FitCoach - App Cliente Pro</title>														
 <script src="https://cdn.tailwindcss.com"></script>														
 <!-- SDK de Supabase V2 -->														
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>														
@@ -168,9 +168,8 @@ Entrar a mi Cuenta
 														
 <!-- SCRIPT DE CONEXIÓN SUPABASE Y LÓGICA -->														
 <script>														
-// 1. Inicialización de Supabase con nombre seguro para evitar conflictos														
-const supabaseUrl = 'https://d8db8cc8wj.supabase.co'; // Tu URL de Supabase														
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImQ4ZGI4Y2M4d2oiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczMDQ1NjMyNCwiZXhwIjoyMDQ2MDMyMzI0fQ.TU_CLAVE_ANONIMA_REAL'; // Tu anon key														
+const supabaseUrl = 'https://d8db8cc8wj.supabase.co';														
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImQ4ZGI4Y2M4d2oiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczMDQ1NjMyNCwiZXhwIjoyMDQ2MDMyMzI0fQ.TU_CLAVE_ANONIMA_REAL';														
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);														
 														
 async function iniciarSesionClient() {														
@@ -238,4 +237,4 @@ row.classList.toggle('set-completed');
 }														
 </script>														
 </body>														
-</html>																																	
+</html>														
