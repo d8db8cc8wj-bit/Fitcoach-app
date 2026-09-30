@@ -72,7 +72,6 @@
 
 <body>
 
-<!-- LOGIN -->
 <section id="loginScreen" class="min-h-screen flex items-center justify-center p-6">
   <div class="w-full max-w-md">
 
@@ -100,10 +99,8 @@
 </section>
 
 
-<!-- APP -->
 <section id="app" class="hidden min-h-screen pb-24">
 
-  <!-- HEADER -->
   <header class="border-b border-zinc-900 p-5 sticky top-0 bg-black z-20">
     <div class="flex items-center justify-between">
       <div>
@@ -119,7 +116,6 @@
   </header>
 
 
-  <!-- HOME -->
   <main id="homePage" class="p-5">
 
     <div class="mb-8">
@@ -148,6 +144,7 @@
 
     <div class="card p-5">
       <h3 class="text-xl font-bold mb-4">Actividad reciente</h3>
+
       <div id="recentActivity" class="space-y-3">
         <p class="text-zinc-500">Cargando...</p>
       </div>
@@ -156,14 +153,11 @@
   </main>
 
 
-  <!-- CLIENTES -->
   <main id="clientsPage" class="hidden p-5">
 
-    <div class="flex justify-between items-center mb-6">
-      <div>
-        <p class="blue text-sm font-bold">GESTIÓN</p>
-        <h2 class="text-3xl font-black">Clientes</h2>
-      </div>
+    <div class="mb-6">
+      <p class="blue text-sm font-bold">GESTIÓN</p>
+      <h2 class="text-3xl font-black">Clientes</h2>
     </div>
 
     <div id="clientsList" class="space-y-3">
@@ -173,7 +167,6 @@
   </main>
 
 
-  <!-- LAB -->
   <main id="labPage" class="hidden p-5">
 
     <div class="mb-6">
@@ -181,23 +174,32 @@
       <h2 class="text-3xl font-black">Laboratorio</h2>
     </div>
 
+
     <div class="card p-6 mb-5">
+
       <div class="text-center">
         <div class="text-5xl mb-4">🧪</div>
-        <h3 class="text-2xl font-bold">Crear ejercicio</h3>
+
+        <h3 class="text-2xl font-bold">
+          Crear ejercicio
+        </h3>
+
         <p class="text-zinc-500 mt-2 mb-5">
           Añade ejercicios propios para utilizarlos en tus programas.
         </p>
 
-        <input id="exerciseName"
+        <input
+          id="exerciseName"
           placeholder="Nombre del ejercicio"
           class="mb-3">
 
-        <input id="exerciseMuscle"
+        <input
+          id="exerciseMuscle"
           placeholder="Músculo objetivo"
           class="mb-3">
 
-        <input id="exerciseVideo"
+        <input
+          id="exerciseVideo"
           placeholder="URL del vídeo (opcional)"
           class="mb-4">
 
@@ -207,6 +209,7 @@
 
         <p id="exerciseMessage" class="text-sm mt-3"></p>
       </div>
+
     </div>
 
 
@@ -220,11 +223,13 @@
         Crea una programación maestra para después asignarla a tus clientes.
       </p>
 
-      <input id="programName"
+      <input
+        id="programName"
         placeholder="Nombre del programa"
         class="mb-3">
 
-      <input id="workoutName"
+      <input
+        id="workoutName"
         placeholder="Primer entrenamiento / Día 1"
         class="mb-4">
 
@@ -238,19 +243,22 @@
 
 
     <div>
+
       <h3 class="text-xl font-bold mb-4">
         Mis programas
       </h3>
 
       <div id="programsList" class="space-y-3">
-        <p class="text-zinc-500">Cargando programas...</p>
+        <p class="text-zinc-500">
+          Cargando programas...
+        </p>
       </div>
+
     </div>
 
   </main>
 
 
-  <!-- BUZÓN -->
   <main id="messagesPage" class="hidden p-5">
 
     <div class="mb-6">
@@ -259,39 +267,59 @@
     </div>
 
     <div class="card p-6 text-center">
+
       <div class="text-5xl mb-4">💬</div>
-      <h3 class="text-xl font-bold">Mensajería</h3>
+
+      <h3 class="text-xl font-bold">
+        Mensajería
+      </h3>
+
       <p class="text-zinc-500 mt-2">
         Este módulo se conectará después al sistema de comunicación coach-cliente.
       </p>
+
     </div>
 
   </main>
 
 
-  <!-- NAV -->
   <nav class="fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-900 z-30">
 
     <div class="max-w-xl mx-auto grid grid-cols-4 py-3">
 
-      <button onclick="showPage('homePage',this)" class="nav-btn nav-active">
+      <button onclick="showPage('homePage',this)"
+        class="nav-btn nav-active">
+
         <div class="text-2xl">⌂</div>
         Home
+
       </button>
 
-      <button onclick="showPage('clientsPage',this)" class="nav-btn">
+
+      <button onclick="showPage('clientsPage',this)"
+        class="nav-btn">
+
         <div class="text-2xl">👥</div>
         Clientes
+
       </button>
 
-      <button onclick="showPage('labPage',this)" class="nav-btn">
+
+      <button onclick="showPage('labPage',this)"
+        class="nav-btn">
+
         <div class="text-2xl">🧪</div>
         Lab
+
       </button>
 
-      <button onclick="showPage('messagesPage',this)" class="nav-btn">
+
+      <button onclick="showPage('messagesPage',this)"
+        class="nav-btn">
+
         <div class="text-2xl">💬</div>
         Buzón
+
       </button>
 
     </div>
@@ -303,73 +331,102 @@
 
 <script>
 
-const SUPABASE_URL = "https://cjwlalyopwinwycidblv.supabase.co";
+const SUPABASE_URL =
+  "https://cjwlalyopwinwycidblv.supabase.co";
 
-/*
-  IMPORTANTE:
-  Esta es la clave PUBLICABLE del proyecto.
-  Nunca debe utilizarse aquí una service_role key.
-*/
-const SUPABASE_ANON_KEY = "sb_publishable_1JhsRYnn7PIpoPWfjc8oOw_6Uhe0tuD";
+const SUPABASE_ANON_KEY =
+  "sb_publishable_1JhsRYnn7PIpoPWfjc8oOw_6Uhe0tuD";
 
 const supabaseClient =
-  supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
 
 let currentUser = null;
 let currentProfile = null;
 
 
-/* -------------------------
-   LOGIN
-------------------------- */
+/* LOGIN */
 
-document.getElementById("loginBtn").addEventListener("click", login);
+document
+  .getElementById("loginBtn")
+  .addEventListener("click", login);
+
 
 async function login() {
 
   const email =
-    document.getElementById("email").value.trim();
+    document
+      .getElementById("email")
+      .value
+      .trim();
 
   const password =
-    document.getElementById("password").value;
+    document
+      .getElementById("password")
+      .value;
 
   const error =
     document.getElementById("loginError");
 
   error.textContent = "";
 
+
   if (!email || !password) {
-    error.textContent = "Introduce correo y contraseña.";
+
+    error.textContent =
+      "Introduce correo y contraseña.";
+
     return;
   }
 
-  const { data, error: authError } =
+
+  const {
+    data,
+    error: authError
+  } =
     await supabaseClient.auth.signInWithPassword({
       email,
       password
     });
 
+
   if (authError) {
-    error.textContent = authError.message;
+
+    error.textContent =
+      authError.message;
+
     return;
   }
 
+
   currentUser = data.user;
 
-  const { data: profile, error: profileError } =
+
+  const {
+    data: profile,
+    error: profileError
+  } =
     await supabaseClient
       .from("profiles")
       .select("*")
       .eq("id", currentUser.id)
       .single();
 
+
   if (profileError) {
+
     error.textContent =
-      "No se pudo cargar el perfil: " + profileError.message;
+      "No se pudo cargar el perfil: " +
+      profileError.message;
 
     await supabaseClient.auth.signOut();
+
     return;
   }
+
 
   if (profile.role !== "coach") {
 
@@ -377,69 +434,85 @@ async function login() {
       "Esta cuenta no tiene permisos de coach.";
 
     await supabaseClient.auth.signOut();
+
     return;
   }
 
+
   currentProfile = profile;
 
-  document.getElementById("loginScreen")
+
+  document
+    .getElementById("loginScreen")
     .classList.add("hidden");
 
-  document.getElementById("app")
+
+  document
+    .getElementById("app")
     .classList.remove("hidden");
 
-  document.getElementById("coachName")
-    .textContent = profile.full_name || "Coach";
+
+  document
+    .getElementById("coachName")
+    .textContent =
+      profile.full_name || "Coach";
+
 
   await loadDashboard();
 
 }
 
 
-/* -------------------------
-   LOGOUT
-------------------------- */
+/* LOGOUT */
 
-document.getElementById("logoutBtn")
-  .addEventListener("click", async () => {
+document
+  .getElementById("logoutBtn")
+  .addEventListener(
+    "click",
+    async () => {
 
-    await supabaseClient.auth.signOut();
+      await supabaseClient.auth.signOut();
 
-    currentUser = null;
-    currentProfile = null;
+      currentUser = null;
+      currentProfile = null;
 
-    document.getElementById("app")
-      .classList.add("hidden");
+      document
+        .getElementById("app")
+        .classList.add("hidden");
 
-    document.getElementById("loginScreen")
-      .classList.remove("hidden");
+      document
+        .getElementById("loginScreen")
+        .classList.remove("hidden");
 
-  });
+    }
+  );
 
 
-/* -------------------------
-   DASHBOARD
-------------------------- */
+/* DASHBOARD */
 
 async function loadDashboard() {
 
   await loadClients();
+
   await loadPrograms();
+
   await loadActivity();
 
 }
 
 
-/* -------------------------
-   CLIENTES
-------------------------- */
+/* CLIENTES */
 
 async function loadClients() {
 
   const list =
     document.getElementById("clientsList");
 
-  const { data, error } =
+
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("coach_clients")
       .select(`
@@ -456,91 +529,112 @@ async function loadClients() {
       .eq("coach_id", currentUser.id)
       .eq("status", "active");
 
+
   if (error) {
 
     list.innerHTML = `
       <div class="card p-5">
+
         <p class="text-red-400">
           Error cargando clientes
         </p>
+
         <p class="text-zinc-500 text-sm mt-2">
           ${escapeHtml(error.message)}
         </p>
+
       </div>
     `;
 
     return;
   }
 
-  document.getElementById("statClients")
-    .textContent = data?.length || 0;
+
+  document
+    .getElementById("statClients")
+    .textContent =
+      data?.length || 0;
+
 
   if (!data || data.length === 0) {
 
     list.innerHTML = `
       <div class="card p-6 text-center">
+
         <p class="text-zinc-500">
           Todavía no tienes clientes asignados.
         </p>
+
       </div>
     `;
 
     return;
   }
 
-  list.innerHTML = data.map(row => {
 
-    const client = row.profiles;
+  list.innerHTML =
+    data.map(row => {
 
-    return `
-      <div class="card p-5">
+      const client =
+        row.profiles;
 
-        <div class="flex justify-between items-start">
 
-          <div>
-            <h3 class="font-bold text-lg">
-              ${escapeHtml(client.full_name)}
-            </h3>
+      return `
+        <div class="card p-5">
 
-            <p class="text-zinc-500 text-sm">
-              ${escapeHtml(client.email)}
-            </p>
+          <div class="flex justify-between items-start">
+
+            <div>
+
+              <h3 class="font-bold text-lg">
+                ${escapeHtml(client.full_name)}
+              </h3>
+
+              <p class="text-zinc-500 text-sm">
+                ${escapeHtml(client.email)}
+              </p>
+
+            </div>
+
+            <span class="text-xs px-3 py-1 rounded-full bg-green-950 text-green-400">
+              Activo
+            </span>
+
           </div>
 
-          <span class="text-xs px-3 py-1 rounded-full bg-green-950 text-green-400">
-            Activo
-          </span>
+
+          <div class="mt-4 text-sm">
+
+            <span class="text-zinc-500">
+              Pago:
+            </span>
+
+            <span class="ml-2">
+              ${escapeHtml(client.payment_status || "Sin estado")}
+            </span>
+
+          </div>
 
         </div>
+      `;
 
-        <div class="mt-4 text-sm">
-          <span class="text-zinc-500">
-            Pago:
-          </span>
-
-          <span class="ml-2">
-            ${escapeHtml(client.payment_status || "Sin estado")}
-          </span>
-        </div>
-
-      </div>
-    `;
-
-  }).join("");
+    }).join("");
 
 }
 
 
-/* -------------------------
-   PROGRAMAS
-------------------------- */
+/* PROGRAMAS */
 
 async function loadPrograms() {
 
   const list =
     document.getElementById("programsList");
 
-  const { data, error } =
+
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("master_programs")
       .select(`
@@ -555,106 +649,137 @@ async function loadPrograms() {
       `)
       .eq("coach_id", currentUser.id)
       .is("deleted_at", null)
-      .order("created_at", {
-        ascending:false
-      });
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      );
+
 
   if (error) {
 
     list.innerHTML = `
       <div class="card p-5">
+
         <p class="text-red-400">
           Error cargando programas
         </p>
+
         <p class="text-zinc-500 text-sm mt-2">
           ${escapeHtml(error.message)}
         </p>
+
       </div>
     `;
 
     return;
   }
 
-  document.getElementById("statPrograms")
-    .textContent = data?.length || 0;
+
+  document
+    .getElementById("statPrograms")
+    .textContent =
+      data?.length || 0;
+
 
   if (!data || data.length === 0) {
 
     list.innerHTML = `
       <div class="card p-5">
+
         <p class="text-zinc-500">
           No tienes programas creados todavía.
         </p>
+
       </div>
     `;
 
     return;
   }
 
-  list.innerHTML = data.map(program => {
 
-    const workouts =
-      (program.master_workouts || [])
-      .sort((a,b) => a.day_order - b.day_order);
+  list.innerHTML =
+    data.map(program => {
 
-    return `
-      <div class="card p-5">
+      const workouts =
+        (program.master_workouts || [])
+          .sort(
+            (a,b) =>
+              a.day_order - b.day_order
+          );
 
-        <h3 class="text-xl font-bold">
-          ${escapeHtml(program.name)}
-        </h3>
 
-        <p class="text-zinc-500 text-sm mt-1">
-          ${workouts.length} entrenamiento(s)
-        </p>
+      return `
+        <div class="card p-5">
 
-        <div class="mt-4 space-y-2">
+          <h3 class="text-xl font-bold">
+            ${escapeHtml(program.name)}
+          </h3>
 
-          ${
-            workouts.length
+          <p class="text-zinc-500 text-sm mt-1">
+            ${workouts.length} entrenamiento(s)
+          </p>
+
+
+          <div class="mt-4 space-y-2">
+
+            ${
+              workouts.length
+
               ? workouts.map(w => `
-                <div class="bg-zinc-950 rounded-xl p-3">
-                  <span class="text-blue-400 font-bold">
-                    Día ${w.day_order}
-                  </span>
-                  <span class="ml-2">
-                    ${escapeHtml(w.name)}
-                  </span>
-                </div>
-              `).join("")
+                  <div class="bg-zinc-950 rounded-xl p-3">
+
+                    <span class="text-blue-400 font-bold">
+                      Día ${w.day_order}
+                    </span>
+
+                    <span class="ml-2">
+                      ${escapeHtml(w.name)}
+                    </span>
+
+                  </div>
+                `).join("")
+
               : `
-                <p class="text-zinc-600">
-                  Sin entrenamientos
-                </p>
-              `
-          }
+                  <p class="text-zinc-600">
+                    Sin entrenamientos
+                  </p>
+                `
+            }
+
+          </div>
 
         </div>
+      `;
 
-      </div>
-    `;
-
-  }).join("");
+    }).join("");
 
 }
 
 
-/* -------------------------
-   ACTIVIDAD
-------------------------- */
+/* ACTIVIDAD */
 
 async function loadActivity() {
 
   const container =
     document.getElementById("recentActivity");
 
-  const { data, error } =
+
+  /*
+    IMPORTANTE:
+    execution_logs no utiliza started_at ni ended_at
+    en nuestra estructura actual.
+  */
+
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("execution_logs")
       .select(`
         id,
-        started_at,
-        ended_at,
         status,
         rpe,
         client_id,
@@ -663,10 +788,8 @@ async function loadActivity() {
         )
       `)
       .eq("status", "completed")
-      .order("ended_at", {
-        ascending:false
-      })
       .limit(20);
+
 
   if (error) {
 
@@ -679,8 +802,12 @@ async function loadActivity() {
     return;
   }
 
-  document.getElementById("statWorkouts")
-    .textContent = data?.length || 0;
+
+  document
+    .getElementById("statWorkouts")
+    .textContent =
+      data?.length || 0;
+
 
   if (!data || data.length === 0) {
 
@@ -693,72 +820,83 @@ async function loadActivity() {
     return;
   }
 
-  container.innerHTML = data.map(log => {
 
-    const name =
-      log.profiles?.full_name || "Cliente";
+  container.innerHTML =
+    data.map(log => {
 
-    const date =
-      log.ended_at
-        ? new Date(log.ended_at).toLocaleString("es-ES")
-        : "Fecha desconocida";
+      const name =
+        log.profiles?.full_name ||
+        "Cliente";
 
-    return `
-      <div class="bg-zinc-950 rounded-xl p-4">
 
-        <p class="font-bold">
-          ${escapeHtml(name)}
-        </p>
+      return `
+        <div class="bg-zinc-950 rounded-xl p-4">
 
-        <p class="text-zinc-500 text-sm mt-1">
-          Entrenamiento completado
-        </p>
+          <p class="font-bold">
+            ${escapeHtml(name)}
+          </p>
 
-        <p class="text-zinc-600 text-xs mt-1">
-          ${date}
-        </p>
+          <p class="text-zinc-500 text-sm mt-1">
+            Entrenamiento completado
+          </p>
 
-        ${
-          log.rpe
-            ? `<p class="text-blue-400 text-xs mt-2">
-                RPE ${log.rpe}/10
-              </p>`
-            : ""
-        }
+          ${
+            log.rpe
+              ? `
+                <p class="text-blue-400 text-xs mt-2">
+                  RPE ${log.rpe}/10
+                </p>
+              `
+              : ""
+          }
 
-      </div>
-    `;
+        </div>
+      `;
 
-  }).join("");
+    }).join("");
 
 }
 
 
-/* -------------------------
-   CREAR EJERCICIO
-------------------------- */
+/* CREAR EJERCICIO */
 
-document.getElementById("createExerciseBtn")
-  .addEventListener("click", createExercise);
+document
+  .getElementById("createExerciseBtn")
+  .addEventListener(
+    "click",
+    createExercise
+  );
+
 
 async function createExercise() {
 
   const name =
-    document.getElementById("exerciseName")
-      .value.trim();
+    document
+      .getElementById("exerciseName")
+      .value
+      .trim();
+
 
   const muscle =
-    document.getElementById("exerciseMuscle")
-      .value.trim();
+    document
+      .getElementById("exerciseMuscle")
+      .value
+      .trim();
+
 
   const video =
-    document.getElementById("exerciseVideo")
-      .value.trim();
+    document
+      .getElementById("exerciseVideo")
+      .value
+      .trim();
+
 
   const message =
     document.getElementById("exerciseMessage");
 
+
   message.textContent = "";
+
 
   if (!name) {
 
@@ -771,21 +909,35 @@ async function createExercise() {
     return;
   }
 
-  const { error } =
+
+  const {
+    error
+  } =
     await supabaseClient
       .from("exercises")
       .insert({
-        coach_id: currentUser.id,
+
+        coach_id:
+          currentUser.id,
+
         name,
-        target_muscle: muscle || null,
-        video_url: video || null,
+
+        target_muscle:
+          muscle || null,
+
+        video_url:
+          video || null,
+
         is_global:false
+
       });
+
 
   if (error) {
 
     message.textContent =
-      "Error: " + error.message;
+      "Error: " +
+      error.message;
 
     message.className =
       "text-red-400 text-sm mt-3";
@@ -793,40 +945,63 @@ async function createExercise() {
     return;
   }
 
+
   message.textContent =
     "✓ Ejercicio creado correctamente.";
 
   message.className =
     "text-green-400 text-sm mt-3";
 
-  document.getElementById("exerciseName").value = "";
-  document.getElementById("exerciseMuscle").value = "";
-  document.getElementById("exerciseVideo").value = "";
+
+  document
+    .getElementById("exerciseName")
+    .value = "";
+
+
+  document
+    .getElementById("exerciseMuscle")
+    .value = "";
+
+
+  document
+    .getElementById("exerciseVideo")
+    .value = "";
 
 }
 
 
-/* -------------------------
-   CREAR PROGRAMA
-------------------------- */
+/* CREAR PROGRAMA */
 
-document.getElementById("createProgramBtn")
-  .addEventListener("click", createProgram);
+document
+  .getElementById("createProgramBtn")
+  .addEventListener(
+    "click",
+    createProgram
+  );
+
 
 async function createProgram() {
 
   const programName =
-    document.getElementById("programName")
-      .value.trim();
+    document
+      .getElementById("programName")
+      .value
+      .trim();
+
 
   const workoutName =
-    document.getElementById("workoutName")
-      .value.trim();
+    document
+      .getElementById("workoutName")
+      .value
+      .trim();
+
 
   const message =
     document.getElementById("programMessage");
 
+
   message.textContent = "";
+
 
   if (!programName || !workoutName) {
 
@@ -840,15 +1015,24 @@ async function createProgram() {
   }
 
 
-  const { data: program, error: programError } =
+  const {
+    data: program,
+    error: programError
+  } =
     await supabaseClient
       .from("master_programs")
       .insert({
-        coach_id:currentUser.id,
-        name:programName
+
+        coach_id:
+          currentUser.id,
+
+        name:
+          programName
+
       })
       .select()
       .single();
+
 
   if (programError) {
 
@@ -863,14 +1047,24 @@ async function createProgram() {
   }
 
 
-  const { error: workoutError } =
+  const {
+    error: workoutError
+  } =
     await supabaseClient
       .from("master_workouts")
       .insert({
-        program_id:program.id,
-        name:workoutName,
-        day_order:1
+
+        program_id:
+          program.id,
+
+        name:
+          workoutName,
+
+        day_order:
+          1
+
       });
+
 
   if (workoutError) {
 
@@ -891,17 +1085,23 @@ async function createProgram() {
   message.className =
     "text-green-400 text-sm mt-3";
 
-  document.getElementById("programName").value = "";
-  document.getElementById("workoutName").value = "";
+
+  document
+    .getElementById("programName")
+    .value = "";
+
+
+  document
+    .getElementById("workoutName")
+    .value = "";
+
 
   await loadPrograms();
 
 }
 
 
-/* -------------------------
-   NAVEGACIÓN
-------------------------- */
+/* NAVEGACIÓN */
 
 function showPage(pageId, button) {
 
@@ -912,32 +1112,45 @@ function showPage(pageId, button) {
     "messagesPage"
   ];
 
+
   pages.forEach(id => {
 
-    document.getElementById(id)
-      .classList.add("hidden");
+    document
+      .getElementById(id)
+      .classList
+      .add("hidden");
 
   });
 
-  document.getElementById(pageId)
-    .classList.remove("hidden");
+
+  document
+    .getElementById(pageId)
+    .classList
+    .remove("hidden");
 
 
-  document.querySelectorAll(".nav-btn")
+  document
+    .querySelectorAll(".nav-btn")
     .forEach(btn =>
-      btn.classList.remove("nav-active")
+      btn.classList
+        .remove("nav-active")
     );
 
-  button.classList.add("nav-active");
+
+  button
+    .classList
+    .add("nav-active");
 
 
   if (pageId === "homePage") {
     loadDashboard();
   }
 
+
   if (pageId === "clientsPage") {
     loadClients();
   }
+
 
   if (pageId === "labPage") {
     loadPrograms();
@@ -946,63 +1159,102 @@ function showPage(pageId, button) {
 }
 
 
-/* -------------------------
-   SEGURIDAD HTML
-------------------------- */
+/* ESCAPE HTML */
 
 function escapeHtml(value) {
 
-  if (value === null || value === undefined)
+  if (
+    value === null ||
+    value === undefined
+  ) {
     return "";
+  }
+
 
   return String(value)
+
     .replace(/&/g,"&amp;")
+
     .replace(/</g,"&lt;")
+
     .replace(/>/g,"&gt;")
+
     .replace(/"/g,"&quot;")
+
     .replace(/'/g,"&#039;");
 
 }
 
 
-/* -------------------------
-   SESIÓN EXISTENTE
-------------------------- */
+/* SESIÓN EXISTENTE */
 
 (async function init() {
 
-  const { data } =
-    await supabaseClient.auth.getSession();
+  const {
+    data
+  } =
+    await supabaseClient
+      .auth
+      .getSession();
 
-  if (!data.session)
+
+  if (!data.session) {
     return;
+  }
 
-  currentUser = data.session.user;
 
-  const { data: profile } =
+  currentUser =
+    data.session.user;
+
+
+  const {
+    data: profile
+  } =
     await supabaseClient
       .from("profiles")
       .select("*")
-      .eq("id", currentUser.id)
+      .eq(
+        "id",
+        currentUser.id
+      )
       .single();
 
-  if (!profile || profile.role !== "coach") {
 
-    await supabaseClient.auth.signOut();
+  if (
+    !profile ||
+    profile.role !== "coach"
+  ) {
+
+    await supabaseClient
+      .auth
+      .signOut();
+
     return;
-
   }
 
-  currentProfile = profile;
 
-  document.getElementById("loginScreen")
-    .classList.add("hidden");
+  currentProfile =
+    profile;
 
-  document.getElementById("app")
-    .classList.remove("hidden");
 
-  document.getElementById("coachName")
-    .textContent = profile.full_name || "Coach";
+  document
+    .getElementById("loginScreen")
+    .classList
+    .add("hidden");
+
+
+  document
+    .getElementById("app")
+    .classList
+    .remove("hidden");
+
+
+  document
+    .getElementById("coachName")
+    .textContent =
+      profile.full_name ||
+      "Coach";
+
 
   await loadDashboard();
 
